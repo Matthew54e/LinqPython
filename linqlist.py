@@ -1,10 +1,11 @@
 from __future__ import annotations
 from collections import defaultdict
-import random
+from itertools import chain
 from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, TypeVar, Union
 
 T = TypeVar('T')
 R = TypeVar('R')
+Q = TypeVar('Q')
 
 def identity(inp: Any) -> Any:
         return inp
@@ -13,6 +14,9 @@ class LinqList(List[T]):
 
     def select(self, key_func: Callable[[T], R]) -> LinqList[R]:
         return LinqList(map(key_func, self))
+    
+    def select_many(self, key_func: Callable[[T], List[R]]) -> LinqList[R]:
+        return LinqList(chain.from_iterable(map(key_func, self)))
 
     def order_by(self, *key_funcs: Callable[[T], Any]) -> LinqList[T]:
         def combined_key_func(item: T) -> tuple:
@@ -72,5 +76,7 @@ class LinqList(List[T]):
         for item in self:
             key = key_func(item)
             result[key].append(item)
-        return result
-
+        return dict(result)
+    
+    def to_dict(self, key_func: Callable[[T], R], value_func: Callable[[T], Q] = identity) -> Dict[R, Q]:
+        return dict([(key_func(x), value_func(x)) for x in self])
