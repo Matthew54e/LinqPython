@@ -31,7 +31,7 @@ class LinqList(List[T]):
         return LinqList(filter(key_func, self))
     
     def count(self, key_func: Callable[[T], bool] = identity) -> int:
-        return len(list(filter(key_func, self)))
+        return sum(1 for _ in filter(key_func, self))
     
     def distinct(self, key_func: Callable[[T], Any] = identity) -> LinqList[T]:
         unique_keys = set()
@@ -55,12 +55,10 @@ class LinqList(List[T]):
         return distinct_counts
     
     def first(self, key_func: Callable[[T], bool], default: Optional[T] = None) -> Optional[T]:
-        filtered = self.where(key_func)
-        return default if filtered.count() == 0 else filtered[0]
+        return next((item for item in self if key_func(item)), default)
     
     def last(self, key_func: Callable[[T], bool], default: Optional[T] = None) -> Optional[T]:
-        filtered = self.where(key_func)
-        return default if filtered.count() == 0 else filtered[-1]
+        return next((item for item in reversed(self) if key_func(item)), default)
     
     def skip(self, amount: int) -> LinqList[T]:
         return LinqList(self[amount:])
@@ -79,4 +77,4 @@ class LinqList(List[T]):
         return dict(result)
     
     def to_dict(self, key_func: Callable[[T], R], value_func: Callable[[T], Q] = identity) -> Dict[R, Q]:
-        return dict([(key_func(x), value_func(x)) for x in self])
+        return {key_func(x): value_func(x) for x in self}
