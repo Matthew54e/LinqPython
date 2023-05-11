@@ -18,17 +18,20 @@ class LinqList(List[T]):
     def select_many(self, key_func: Callable[[T], List[R]]) -> LinqList[R]:
         return LinqList(chain.from_iterable(map(key_func, self)))
 
-    def order_by(self, *key_funcs: Callable[[T], Any]) -> LinqList[T]:
+    def order_by(self, *key_funcs: Callable[[T], Any], desc = False) -> LinqList[T]:
         def combined_key_func(item: T) -> tuple:
             return tuple(key_func(item) for key_func in key_funcs)
         
-        return LinqList(sorted(self, key=combined_key_func))
+        return LinqList(sorted(self, key=combined_key_func, reverse=desc))
 
     def sum_of(self, key_func: Callable[[T], Union[int, float]] = identity) -> Union[float, int]:
         return sum(key_func(item) for item in self)
 
     def where(self, key_func: Callable[[T], bool]) -> LinqList[T]:
         return LinqList(filter(key_func, self))
+
+    def index_where(self, key_func: Callable[[T], bool]) -> LinqList[int]:
+        return LinqList([i for i, item in enumerate(self) if key_func(item)])
     
     def count(self, key_func: Callable[[T], bool] = identity) -> int:
         return sum(1 for _ in filter(key_func, self))
